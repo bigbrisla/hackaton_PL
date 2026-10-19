@@ -116,7 +116,7 @@ input[type="number"] { width: 58px; }
 .eyes-btn { width: 100%; margin-top: 10px; padding: 12px; font-weight: 700; background: #1a0f18; border-color: var(--bad); }
 .eyes-btn.active { background: var(--bad); color: #fff; }
 
-.recap { position: absolute; inset: 40px 60px; background: rgba(6,10,17,.96); border-radius: 16px; padding: 28px 32px; border: 1px solid var(--line); overflow: auto; animation: slidein .5s; }
+.recap { position: absolute; top: 70px; left: 60px; right: 60px; max-height: calc(100% - 110px); background: rgba(6,10,17,.96); border-radius: 16px; padding: 28px 32px; border: 1px solid var(--line); overflow: auto; animation: slidein .5s; }
 .recap-k { color: var(--accent); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 700; }
 .recap-h { font-size: 30px; font-weight: 800; margin: 8px 0; }
 .recap-b { font-size: 16px; line-height: 1.5; color: #d6dfec; }

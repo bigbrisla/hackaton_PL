@@ -129,7 +129,7 @@ export default function Pitch({ meta, events, frame, overlays, spotlight, focusP
                 <line x1={spotlight.from[0]} y1={spotlight.from[1]} x2={spotlight.best.xy[0]} y2={spotlight.best.xy[1]}
                       stroke="#ffd34d" strokeWidth={0.65} strokeDasharray="1.6 1" markerEnd="url(#arrow-gold)" filter="url(#glow)" className="ghost" />
                 <circle cx={spotlight.best.xy[0]} cy={spotlight.best.xy[1]} r={2.6} fill="none" stroke="#ffd34d" strokeWidth={0.35} className="pulse-ring" />
-                <text x={spotlight.best.xy[0]} y={spotlight.best.xy[1] + 5.4} className="ghost-label">better option: {spotlight.best.name}</text>
+                <text x={Math.min(88, Math.max(17, spotlight.best.xy[0]))} y={Math.max(4, spotlight.best.xy[1] - 4)} className="ghost-label">better option: {spotlight.best.name}</text>
               </g>
             )}
           </g>

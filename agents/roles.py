@@ -23,7 +23,10 @@ estimate or invent numbers, names, minutes or scores. Keep player names exactly 
 The match minute is "clock" (90 minutes plus added time; period 1 is the first half); the score is
 context.score. Never use a minute as a score. For goals, facts.goal_effect says whether it is an opener,
 equaliser, takes_the_lead, extends_lead or pulls_one_back: never describe it differently. Statistics are for this match only. Describe only actions
-present in the data (e.g. say "header" only if body_part is head)."""
+present in the data (e.g. say "header" only if body_part is head).
+Write for people, never data: no field names (no snake_case like chosen_value or best_option_success_prob).
+Say "the pass he chose was worth 0.005 expected threat, the one to Asante 0.057", "a 30% chance",
+"Chaos Index 92". Probabilities between 0 and 1 are best written as whole percentages."""
 
 ANALYST = f"""You are the lead analyst of a live football broadcast production team.
 You receive one key moment detected by the match engine (JSON). Decide its airtime:
