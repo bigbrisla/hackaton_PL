@@ -11,13 +11,14 @@ and a timed overlay feed.
 
 from __future__ import annotations
 
-import itertools
 from collections import defaultdict, deque
 
 from .chaos import ChaosMeter
+from .positions import FrameBuilder
 from .models import flip, option_value, pass_difficulty, pass_features, pass_success, xg, xt
 
 SNAPSHOT_EVERY_S = 10.0
+FRAME_TYPES = {"pass", "carry", "shot", "tackle", "interception", "pressure", "set_piece", "save"}
 SPEED_TAG_KMH = 34.5
 SHOT_SPEED_TAG_KMH = 105.0
 DISTANCE_MILESTONES_M = (5_000, 10_000)
@@ -48,6 +49,7 @@ class MatchEngine:
         self.pstats = defaultdict(player_stats)
         self.tstats = {self.home_id: team_stats(), self.away_id: team_stats()}
         self.chaos = ChaosMeter(self.home_id)
+        self.frames = FrameBuilder(meta)
         self.chaos_history: deque[tuple[float, dict]] = deque(maxlen=60)
         self.chaos_series: list[tuple[float, int]] = []  # whole match, for the seismograph
         self.recent: deque[dict] = deque(maxlen=40)
@@ -56,12 +58,16 @@ class MatchEngine:
         self.last_moment_ts: dict[str, float] = {}
         self.last_control_side: str | None = None
         self.spell = (None, 0)  # (possession_id, consecutive completed passes)
-        self.ids = itertools.count()
+        self._next_id = 0  # plain int so the engine can be snapshotted with copy.deepcopy
         self.moments: list[dict] = []
         self.minute, self.added = 0, 0
         self.where: dict | None = None  # location of the event being ingested
 
     # ------------------------------------------------------------------ helpers
+    def new_id(self) -> int:
+        self._next_id += 1
+        return self._next_id - 1
+
     def name(self, pid: str | None) -> str | None:
         return self.players[pid]["name"] if pid in self.players else None
 
@@ -84,13 +90,13 @@ class MatchEngine:
 
     def overlay(self, ev: dict, layer: str, template: str, data: dict, duration: float = 5.0,
                 priority: int = 50) -> dict:
-        return {"kind": "overlay", "overlay_id": f"ov-{next(self.ids)}", "layer": layer, "template": template,
+        return {"kind": "overlay", "overlay_id": f"ov-{self.new_id()}", "layer": layer, "template": template,
                 "in_ts": ev["ts"], "out_ts": round(ev["ts"] + duration, 2), "priority": priority,
                 "source_event": ev["id"], "data": data}
 
     def moment(self, ev: dict, type_: str, priority: int, title: str, facts: dict,
                team_id: str | None = None, player_id: str | None = None) -> dict:
-        m = {"kind": "moment", "moment_id": f"m-{next(self.ids)}", "type": type_, "priority": priority,
+        m = {"kind": "moment", "moment_id": f"m-{self.new_id()}", "type": type_, "priority": priority,
              "ts": ev["ts"], "clock": self.clock(ev), "period": ev["period"], "source_event": ev["id"],
              "team_id": team_id, "team": self.team_names.get(team_id), "player_id": player_id,
              "player": self.name(player_id), "title": title, "facts": facts, "where": self.where,
@@ -110,7 +116,8 @@ class MatchEngine:
         enriched = self._enrich(ev)
         # a goal has no location of its own: keep the shot's
         self.where = self._where(ev, enriched) or (self.where if ev["type"] == "goal" else None)
-        out.append({"kind": "event", "event": ev, "enriched": enriched})
+        out.append({"kind": "event", "event": ev, "enriched": enriched,
+                    "frame": self.frames.frame(ev, enriched) if ev["type"] in FRAME_TYPES else None})
         out += self._update_stats(ev, enriched)
         out += self._detect(ev, enriched)
         if ev["ts"] >= self.next_snapshot or ev["type"] in ("goal", "period_end", "match_end"):

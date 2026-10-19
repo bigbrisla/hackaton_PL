@@ -40,6 +40,7 @@ export default function App() {
   const [focusPlayer, setFocusPlayer] = useState<string | null>(Q.get("player"));
   const [metric, setMetric] = useState<Metric>((Q.get("metric") as Metric) ?? "speed");
   const [eyesClosed, setEyesClosed] = useState(false);
+  const [camera, setCamera] = useState<"broadcast" | "tactical">((Q.get("cam") as "tactical") ?? "broadcast");
   const [now, setNow] = useState(performance.now());
   const [playerStats, setPlayerStats] = useState<Record<string, any> | null>(null);
   const audio = useRef(new PulseAudio());
@@ -82,7 +83,7 @@ export default function App() {
   }, [persona, focusPlayer, state.sessionId]);
 
   const kickOff = () => {
-    const langs = Array.from(new Set(["en", "it", "ja", lang]));
+    const langs = ["en", "it", "es", "ja"];  // fixed set: every market is ready, and cached stories always match
     start({ matchId, speed, startMinute, langs, focusPlayer });
   };
 
@@ -159,7 +160,13 @@ export default function App() {
           <div className={`stage ${eyesClosed ? "eyes-closed" : ""}`}>
             {meta ? (
               <>
-                <Pitch meta={meta} events={state.events} overlays={state.overlays} spotlight={spotlight} focusPlayer={focusPlayer} dimmed={eyesClosed} />
+                <Pitch meta={meta} events={state.events} frame={state.frame} overlays={state.overlays} spotlight={spotlight}
+                       focusPlayer={focusPlayer} camera={camera} speed={speed} dimmed={eyesClosed} />
+                {!eyesClosed && (
+                  <button className="cam-toggle" onClick={() => setCamera(camera === "broadcast" ? "tactical" : "broadcast")}>
+                    {camera === "broadcast" ? "◫ Tactical view" : "🎥 Broadcast cam"}
+                  </button>
+                )}
                 <ScoreBug meta={meta} score={state.score} clock={state.clock} home={state.home} away={state.away} favoriteClub={favoriteClub} />
                 {!eyesClosed && <Overlays overlays={state.overlays} meta={meta} persona={persona} metric={metric} now={now} speed={speed} />}
                 {story && !eyesClosed && <StoryCard story={story} persona={persona} lang={lang} meta={meta} />}

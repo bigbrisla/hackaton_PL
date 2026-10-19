@@ -59,8 +59,9 @@ def load_match(match_id: str) -> tuple[dict, list[dict]]:
     return meta, [e.to_dict() for e in events]
 
 
-def cache_path(match_id: str, moment_id: str, langs: list[str], focus: str | None) -> Path:
-    return CACHE_DIR / match_id / f"{moment_id}__{'-'.join(langs)}__{focus or 'none'}.json"
+def cache_path(match_id: str, moment: dict, langs: list[str], focus: str | None) -> Path:
+    # keyed on the source event and moment type, which stay stable when the engine evolves
+    return CACHE_DIR / match_id / f"{moment['source_event']}__{moment['type']}__{'-'.join(langs)}__{focus or 'none'}.json"
 
 
 @app.get("/api/health")
@@ -130,10 +131,14 @@ class Session:
                 await self.on_trace({"moment_id": moment["moment_id"], "agent": "producer",
                                      "status": "dropped_stale", "ms": 0, "detail": "the match has moved on"})
                 continue
-            path = cache_path(self.meta["match_id"], moment["moment_id"], self.langs, self.focus)
+            path = cache_path(self.meta["match_id"], moment, self.langs, self.focus)
             if path.exists():
                 story = json.loads(path.read_text())
-                story["cached"] = True
+                story.update(cached=True, moment_id=moment["moment_id"])
+                for t in story.get("trace", []):
+                    t["moment_id"] = moment["moment_id"]
+                for t in story.get("trace", []):  # replay the hand-offs so the newsroom panel shows them
+                    await self.on_trace({**t, "detail": t.get("detail", ""), "cached": True})
             else:
                 story = await self.newsroom.cover(moment)
                 if online():

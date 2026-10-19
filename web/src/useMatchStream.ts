@@ -19,6 +19,7 @@ export interface MatchState {
   home: TeamSummary | null;
   away: TeamSummary | null;
   events: LiveEvent[];
+  frame: [string, number, number][] | null;
   overlays: Overlay[];
   moments: Moment[];
   stories: Story[];
@@ -27,7 +28,7 @@ export interface MatchState {
 
 const initial: MatchState = {
   status: "idle", sessionId: null, model: "", meta: null, now: 0, clock: "0'", score: {}, chaos: null,
-  chaosHistory: [], home: null, away: null, events: [], overlays: [], moments: [], stories: [], traces: [],
+  chaosHistory: [], home: null, away: null, events: [], frame: null, overlays: [], moments: [], stories: [], traces: [],
 };
 
 type Action = { type: "reset" } | { type: "status"; status: MatchState["status"] } | { type: "msg"; msg: any };
@@ -46,7 +47,8 @@ function reducer(s: MatchState, a: Action): MatchState {
                chaosHistory: m.chaos_series, moments: m.moments, now: st.ts };
     }
     case "event":
-      return { ...s, now: m.event.ts, events: [...s.events.slice(-299), { event: m.event, enriched: m.enriched }] };
+      return { ...s, now: m.event.ts, frame: m.frame ?? s.frame,
+               events: [...s.events.slice(-299), { event: m.event, enriched: m.enriched }] };
     case "overlay":
       return { ...s, overlays: [...s.overlays.slice(-60), { ...m, shownAt: performance.now() }] };
     case "state":

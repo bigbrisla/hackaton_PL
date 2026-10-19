@@ -1,4 +1,5 @@
 import type { Meta, TeamSummary } from "../types";
+import Crest from "./Crest";
 
 interface Props {
   meta: Meta;
@@ -12,7 +13,7 @@ interface Props {
 export default function ScoreBug({ meta, score, clock, home, away, favoriteClub }: Props) {
   const side = (t: Meta["home"], s: TeamSummary | null) => (
     <div className={`sb-team ${favoriteClub === t.id ? "fav" : ""}`}>
-      <span className="sb-kit" style={{ background: `linear-gradient(135deg, ${t.colors[0]} 60%, ${t.colors[1]} 60%)` }} />
+      <Crest team={t} size={20} />
       <span className="sb-name">{t.short_name}</span>
       <span className="sb-score">{score[t.id] ?? 0}</span>
       {s && <span className="sb-sub">xG {s.xg.toFixed(2)}</span>}
