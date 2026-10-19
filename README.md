@@ -1,5 +1,11 @@
 # Pulse — explainable match intelligence for every fan
 
+**Live demo:** https://pulse.ambitiousglacier-206bf68c.swedencentral.azurecontainerapps.io
+(try `?autostart=1&from=84&speed=2&persona=analyst`, or *Eyes-free* → *Close your eyes* with headphones) ·
+**Video:** _coming soon_ · **Submission notes:** [docs/SUBMISSION.md](docs/SUBMISSION.md)
+
+The app scales to zero: the first visit can take a few seconds to wake up.
+
 Microsoft × Premier League "Inside the Game" hackathon project. All data is synthetic;
 clubs and players are fictional.
 
@@ -105,3 +111,21 @@ uv run uvicorn engine.server:app
 
 Without `FOUNDRY_PROJECT_ENDPOINT` (or with `PULSE_OFFLINE=1`) every agent uses its deterministic
 fallback, which is also what the test-suite runs.
+
+## Deployment
+
+One container ([Dockerfile](Dockerfile)) serves the web app, the WebSocket feed, the agent newsroom and the
+MCP endpoint. GitHub Actions ([ci.yml](.github/workflows/ci.yml)) runs the tests, builds the web app and
+publishes the image to GitHub Container Registry; it runs on **Azure Container Apps** with a system-assigned
+managed identity granted *Azure AI Developer*, *Cognitive Services OpenAI User* and *Cognitive Services Speech
+User* on the Foundry resource, so no key exists anywhere.
+
+```bash
+az containerapp create -g <rg> -n pulse --environment <env> --image ghcr.io/bigbrisla/hackaton_pl:latest \
+  --target-port 8000 --ingress external --min-replicas 0 --max-replicas 1 --system-assigned \
+  --env-vars FOUNDRY_PROJECT_ENDPOINT=... FOUNDRY_MODEL=gpt-5-mini AZURE_SPEECH_REGION=... \
+             AZURE_SPEECH_RESOURCE_ID=... PULSE_MCP_URL=http://127.0.0.1:8000/mcp/
+```
+
+Demo stories are pre-generated with `uv run python -m scripts.prewarm --match NBR-HRV-7` (each moment is
+covered against a snapshot of the engine at that minute) and replayed instantly; other fixtures run live.

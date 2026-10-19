@@ -15,7 +15,7 @@ option the passer had) and a live **Chaos Index** (control versus chaos). Six sp
 verified story: an analyst gathers evidence through our **MCP server**, a tactician explains why it
 matters, a storyteller writes per persona, a verifier traces every number and name back to the engine
 and sends drafts back when they don't match, a localizer adapts it for each market and a producer
-schedules it on screen. In the demo match the verifier caught 14 ungrounded drafts; none reached the screen.
+schedules it on screen. In the demo match the verifier caught 12 ungrounded drafts; none reached the screen.
 
 ## Microsoft technologies
 
